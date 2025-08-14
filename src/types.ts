@@ -107,4 +107,5 @@ export interface MapboxNavigationProps {
   onError?: (error: MapboxEvent) => void;
   onCancelNavigation?: (event: MapboxEvent) => void;
   onArrive?: (point: WaypointEvent) => void;
+  realTimeList?: Array<any>; // new optional prop
 }

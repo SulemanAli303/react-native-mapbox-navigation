@@ -29,18 +29,26 @@ public protocol MapboxCarPlayNavigationDelegate {
 public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     public weak var navViewController: NavigationViewController?
     public var indexedRouteResponse: IndexedRouteResponse?
-    
+
     var embedded: Bool
     var embedding: Bool
 
     @objc public var startOrigin: NSArray = [] {
         didSet { setNeedsLayout() }
     }
-    
+
     var waypoints: [Waypoint] = [] {
         didSet { setNeedsLayout() }
     }
-    
+      // ADD THIS
+        @objc var realTimeList: NSArray = [] {
+            didSet {
+                let userList = realTimeList as? [[String: Any]] ?? []
+                DispatchQueue.main.async {
+                updateMarkers(userList)
+                }
+            }
+        }
     func setWaypoints(waypoints: [MapboxWaypoint]) {
       self.waypoints = waypoints.enumerated().map { (index, waypointData) in
           let name = waypointData.name as? String ?? "\(index)"
@@ -49,11 +57,11 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           return waypoint
       }
     }
-    
+
     @objc var destination: NSArray = [] {
         didSet { setNeedsLayout() }
     }
-    
+
     @objc var shouldSimulateRoute: Bool = false
     @objc var showsEndOfRouteFeedback: Bool = false
     @objc var showCancelButton: Bool = false
@@ -96,7 +104,7 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         super.removeFromSuperview()
         // cleanup and teardown any existing resources
         self.navViewController?.removeFromParent()
-        
+
         // MARK: End CarPlay Navigation
         if let carPlayNavigation = UIApplication.shared.delegate as? MapboxCarPlayNavigationDelegate {
             carPlayNavigation.endNavigation()
@@ -167,7 +175,7 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
 
             strongSelf.embedding = false
             strongSelf.embedded = true
-            
+
             // MARK: Start CarPlay Navigation
             if let carPlayNavigation = UIApplication.shared.delegate as? MapboxCarPlayNavigationDelegate {
                 carPlayNavigation.startNavigation(with: strongSelf)
@@ -205,4 +213,12 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         ])
         return true;
     }
+
+        @objc func updateMarkers(_ users: [[String: Any]]) {
+            // Example:
+                       // 1. Remove old markers
+                       // 2. Loop through `users` and add new markers
+                       //    Make sure to convert coordinates from Double
+                       print("Updating markers with \(users.count) users")
+           }
 }

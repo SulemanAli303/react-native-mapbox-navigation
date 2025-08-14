@@ -832,4 +832,8 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
         else -> DirectionsCriteria.PROFILE_DRIVING_TRAFFIC
     }
   }
+
+    public void updateMarkers(List<Map<String, Object>> userList) {
+          // update pins here
+      }
 }

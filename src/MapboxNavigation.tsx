@@ -12,10 +12,6 @@ import {
 import type { MapboxNavigationProps } from './types';
 import MapboxNavigationView from './MapboxNavigationViewNativeComponent';
 
-// import MapboxNavigationNativeComponent, {
-//   Commands,
-// } from './MapboxNavigationViewNativeComponent';
-
 const permissions: Array<Permission> =
   Platform.OS === 'android' && Platform.Version >= 33
     ? [

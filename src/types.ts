@@ -29,6 +29,19 @@ export type WaypointEvent = Coordinate & {
   index?: number;
 };
 
+export type Participant = {
+  _id: string;
+  userMail: string;
+  coverImage: string;
+  displayName: string;
+  imageUrl: string;
+  isBenzifiMember: boolean;
+  nation: string;
+  userName: string;
+  lat: number;
+  lng: number;
+};
+
 export type Location = {
   latitude: number;
   longitude: number;
@@ -69,6 +82,7 @@ export interface MapboxNavigationProps {
   destination: Coordinate & { title?: string };
   language?: Language;
   distanceUnit?: 'metric' | 'imperial';
+  realTimeList?: Participant[];
 
   /**
    * Specifies the mode of travel for navigation.
@@ -107,5 +121,4 @@ export interface MapboxNavigationProps {
   onError?: (error: MapboxEvent) => void;
   onCancelNavigation?: (event: MapboxEvent) => void;
   onArrive?: (point: WaypointEvent) => void;
-  realTimeList?: Array<any>; // new optional prop
 }

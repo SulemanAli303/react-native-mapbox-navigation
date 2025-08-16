@@ -211,16 +211,12 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     func setParticipants(participants: [MapboxParticipant]) {
         self.participants = participants
         guard let mapView = navViewController?.navigationMapView else { return }
-        for user in participants {
-                if let lat = user.latitude,
-                let lon = user.longitude {
-                    let point = PointAnnotation(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
-                    point.title = user.name as? String ?? "User"
-                    mapView.addAnnotation(point)
-                }
-            }
-            
-        // You can add any logic here if you need to refresh the view when participants change
+        let pointAnnotationManager = mapView.mapView.annotations.makePointAnnotationManager()
+        pointAnnotationManager.annotations = participants.map {user in
+        var pointAnnotation = PointAnnotation(coordinate: user.coordinate)
+        pointAnnotation.image = .init(image: UIImage(named: "dest-pin")!, name: "dest-pin")
+        pointAnnotation.textField = user.displayName
+        return pointAnnotation
+        }   
     }
-
 }

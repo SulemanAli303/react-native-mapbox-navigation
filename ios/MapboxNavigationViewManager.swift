@@ -22,9 +22,4 @@ class MapboxNavigationViewManager: RCTViewManager {
         }
         currentView.setWaypoints(waypoints: waypoints)
     }
-
-
-       @objc override static func propConfig_realTimeList() -> [String] {
-               return ["NSArray"] // tells RN it's a prop, not just a method
-           }
 }

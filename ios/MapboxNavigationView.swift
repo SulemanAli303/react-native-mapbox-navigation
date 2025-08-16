@@ -45,7 +45,7 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
             didSet {
                 let userList = realTimeList as? [[String: Any]] ?? []
                 DispatchQueue.main.async {
-                updateMarkers(userList)
+                self.updateMarkers(userList)
                 }
             }
         }

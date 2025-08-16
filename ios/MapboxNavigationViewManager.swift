@@ -22,4 +22,12 @@ class MapboxNavigationViewManager: RCTViewManager {
         }
         currentView.setWaypoints(waypoints: waypoints)
     }
+
+    @objc(setParticipants:participants:)
+    public func setParticipants(view: Any, participants: [MapboxParticipant]) {
+        guard let currentView = view as? MapboxNavigationView else {
+            return
+        }
+        currentView.setParticipants(participants: participants)
+    }
 }

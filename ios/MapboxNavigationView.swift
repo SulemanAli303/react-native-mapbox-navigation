@@ -40,15 +40,9 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     var waypoints: [Waypoint] = [] {
         didSet { setNeedsLayout() }
     }
-      // ADD THIS
-        @objc var realTimeList: NSArray = [] {
-            didSet {
-                let userList = realTimeList as? [[String: Any]] ?? []
-                DispatchQueue.main.async {
-                self.updateMarkers(userList)
-                }
-            }
-        }
+    var participants: [MapboxParticipant] = []
+
+
     func setWaypoints(waypoints: [MapboxWaypoint]) {
       self.waypoints = waypoints.enumerated().map { (index, waypointData) in
           let name = waypointData.name as? String ?? "\(index)"
@@ -214,11 +208,19 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         return true;
     }
 
-        @objc func updateMarkers(_ users: [[String: Any]]) {
-            // Example:
-                       // 1. Remove old markers
-                       // 2. Loop through `users` and add new markers
-                       //    Make sure to convert coordinates from Double
-                       print("Updating markers with \(users.count) users")
-           }
+    func setParticipants(participants: [MapboxParticipant]) {
+        self.participants = participants
+        guard let mapView = navViewController?.navigationMapView else { return }
+        for user in participants {
+                if let lat = user.latitude,
+                let lon = user.longitude {
+                    let point = PointAnnotation(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
+                    point.title = user.name as? String ?? "User"
+                    mapView.addAnnotation(point)
+                }
+            }
+            
+        // You can add any logic here if you need to refresh the view when participants change
+    }
+
 }

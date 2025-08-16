@@ -22,12 +22,9 @@ class MapboxNavigationViewManager: RCTViewManager {
         }
         currentView.setWaypoints(waypoints: waypoints)
     }
-   @objc func setRealTimeList(_ reactTag: NSNumber, list: NSArray) {
-           self.bridge.uiManager.addUIBlock { (_, viewRegistry) in
-               if let view = viewRegistry?[reactTag] as? MapboxNavigationView {
-                   let userList = list as? [[String: Any]] ?? []
-                   view.updateMarkers(userList)
-               }
+
+
+       @objc override static func propConfig_realTimeList() -> [String] {
+               return ["NSArray"] // tells RN it's a prop, not just a method
            }
-       }
 }

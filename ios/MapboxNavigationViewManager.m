@@ -32,9 +32,5 @@ RCT_EXPORT_VIEW_PROPERTY(language, NSString)
 RCT_EXPORT_VIEW_PROPERTY(distanceUnit, NSString)
 RCT_EXPORT_VIEW_PROPERTY(mute, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(travelMode, NSString)
-RCT_CUSTOM_VIEW_PROPERTY(realTimeList, NSArray, NSObject)
-{
-     MapboxParticipantArray *participants = [RCTConvert MapboxParticipantArray:json];
-    [self performSelector:@selector(setParticipants:participants:) withObject:view withObject:participants];
-}
+
 @end

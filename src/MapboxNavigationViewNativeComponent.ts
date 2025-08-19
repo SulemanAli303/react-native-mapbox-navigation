@@ -24,18 +24,6 @@ interface NativeProps extends ViewProps {
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
   travelMode?: string;
-  realTimeList?: {
-    _id: string;
-    userMail: string;
-    coverImage: string;
-    displayName: string;
-    imageUrl: string;
-    isBenzifiMember: boolean;
-    nation: string;
-    userName: string;
-    lat: number;
-    lng: number;
-  }[];
 }
 
 export default codegenNativeComponent<NativeProps>(

@@ -2,6 +2,7 @@
 import MapboxCoreNavigation
 import MapboxNavigation
 import MapboxDirections
+import MapboxMaps
 
 extension UIView {
     var parentViewController: UIViewController? {
@@ -26,7 +27,7 @@ public protocol MapboxCarPlayNavigationDelegate {
     func endNavigation()
 }
 
-public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
+public class MapboxNavigationView: UIView, NavigationViewControllerDelegate, ParticipantsManagerDelegate {
     public weak var navViewController: NavigationViewController?
     public var indexedRouteResponse: IndexedRouteResponse?
 
@@ -40,8 +41,6 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     var waypoints: [Waypoint] = [] {
         didSet { setNeedsLayout() }
     }
-    var participants: [MapboxParticipant] = []
-
 
     func setWaypoints(waypoints: [MapboxWaypoint]) {
       self.waypoints = waypoints.enumerated().map { (index, waypointData) in
@@ -78,6 +77,12 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         self.embedded = false
         self.embedding = false
         super.init(frame: frame)
+        ParticipantsManager.shared?.delegate = self
+
+        // Initial load
+        if let participants = ParticipantsManager.shared?.getParticipants() {
+            updateParticipantsOnMap(participants)
+        }
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -92,6 +97,11 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         } else {
             navViewController?.view.frame = bounds
         }
+    }
+
+    func participantsDidUpdate(_ list: [[String: Any]]) {
+        print("Participants updated:", list)
+        updateParticipantsOnMap(list)
     }
 
     public override func removeFromSuperview() {
@@ -208,15 +218,7 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         return true;
     }
 
-    func setParticipants(participants: [MapboxParticipant]) {
-        self.participants = participants
-        guard let mapView = navViewController?.navigationMapView else { return }
-        let pointAnnotationManager = mapView.mapView.annotations.makePointAnnotationManager()
-        pointAnnotationManager.annotations = participants.map {user in
-        var pointAnnotation = PointAnnotation(coordinate: user.coordinate)
-        pointAnnotation.image = .init(image: UIImage(named: "dest-pin")!, name: "dest-pin")
-        pointAnnotation.textField = user.displayName
-        return pointAnnotation
-        }   
+    private func updateParticipantsOnMap(_ list: [[String: Any]]) {
+        // Update Mapbox markers here
     }
 }

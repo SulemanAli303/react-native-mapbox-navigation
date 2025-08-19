@@ -9,7 +9,6 @@
 #import <React/RCTConvert+CoreLocation.h>
 
 #import "MapboxWaypoint.h"
-#import "MapboxParticipant.h"
 
 @interface RCTConvert (MapboxNavigation)
 
@@ -18,8 +17,4 @@
 typedef NSArray MapboxWaypointArray;
 + (MapboxWaypointArray *)MapboxWaypointArray:(id)json;
 
-// MARK: - Participant
-+ (MapboxParticipant *)MapboxParticipant:(id)json;
-typedef NSArray<MapboxParticipant *> MapboxParticipantArray;
-+ (MapboxParticipantArray *)MapboxParticipantArray:(id)json;
 @end

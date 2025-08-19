@@ -116,16 +116,6 @@ class MapboxNavigationViewManager(private var reactContext: ReactApplicationCont
     }
   }
 
-  @ReactProp(name = "realTimeList")
-      public void setRealTimeList(MapboxNavigationView view, ReadableArray list) {
-          List<Map<String, Object>> userList = new ArrayList<>();
-          for (int i = 0; i < list.size(); i++) {
-              ReadableMap map = list.getMap(i);
-              userList.add(map.toHashMap());
-          }
-          view.updateMarkers(userList);
-      }
-
   companion object {
     const val NAME = "MapboxNavigationView"
   }

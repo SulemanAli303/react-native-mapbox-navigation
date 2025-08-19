@@ -23,25 +23,4 @@
 
 RCT_ARRAY_CONVERTER(MapboxWaypoint)
 
-+ (MapboxParticipant *)MapboxParticipant:(id)json {
-    MapboxParticipant *p = [MapboxParticipant new];
-    json = [self NSDictionary:json];
-    p.participantId = json[@"_id"];
-    p.userMail = json[@"userMail"];
-    p.coverImage = json[@"coverImage"];
-    p.displayName = json[@"displayName"];
-    p.imageUrl = json[@"imageUrl"];
-    p.isBenzifiMember = json[@"isBenzifiMember"] != nil ? [json[@"isBenzifiMember"] boolValue] : NO;
-    p.nation = json[@"nation"];
-    p.userName = json[@"userName"];
-    p.coordinate = (CLLocationCoordinate2D){
-        [self CLLocationDegrees:json[@"lat"]],
-        [self CLLocationDegrees:json[@"lng"]]
-    };
-    return p;
-}
-
-RCT_ARRAY_CONVERTER(MapboxParticipant)
-
 @end
-

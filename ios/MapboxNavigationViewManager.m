@@ -7,7 +7,6 @@
 
 #import "React/RCTViewManager.h"
 #import "MapboxWaypoint.h"
-#import "MapboxParticipant.h"
 #import "RCTConvert+MapboxNavigation.h"
 
 @interface RCT_EXTERN_MODULE(MapboxNavigationViewManager, RCTViewManager)

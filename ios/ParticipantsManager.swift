@@ -18,7 +18,12 @@ class ParticipantsManager: RCTEventEmitter {
   override init() {
     super.init()
     ParticipantsManager.shared = self
+    print("✅ ParticipantsManager initialized")
   }
+
+    override static func moduleName() -> String! {
+        return "ParticipantsManager"
+    }
 
   override static func requiresMainQueueSetup() -> Bool {
     return true
@@ -37,7 +42,8 @@ class ParticipantsManager: RCTEventEmitter {
   }
 
   // Called from JS
-  @objc func updateParticipants(_ list: [[String: Any]]) {
+    @objc(updateParticipants:)
+    func updateParticipants(_ list: [[String: Any]]) {
     participants = list
     // Notify JS listeners
     if hasListeners {
@@ -46,6 +52,14 @@ class ParticipantsManager: RCTEventEmitter {
     // Notify native listener
     delegate?.participantsDidUpdate(list)
   }
+
+//    @objc
+//    func updateParticipants(_ participants: NSArray) {
+//        print("📡 iOS ParticipantsManager got \(participants.count) participants")
+//        for case let dict as NSDictionary in participants {
+//            print("👉 Participant:", dict)
+//        }
+//    }
 
   // Allow MapboxNavigationView to pull latest list
   func getParticipants() -> [[String: Any]] {

@@ -1,13 +1,23 @@
 package com.mapboxnavigation
 
+import android.animation.TypeEvaluator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.UiThreadUtil.runOnUiThread
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.api.directions.v5.DirectionsCriteria
@@ -19,8 +29,15 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.ImageHolder
+import com.mapbox.maps.extension.style.atmosphere.generated.getAtmosphere
+import com.mapbox.maps.extension.style.layers.properties.generated.IconPitchAlignment
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
@@ -83,7 +100,8 @@ import com.mapboxnavigation.databinding.NavigationViewBinding
 import java.util.Locale
 
 @SuppressLint("ViewConstructor")
-class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout(context.baseContext) {
+class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout(context.baseContext),
+  ParticipantsManager.ParticipantsDelegate {
   private companion object {
     private const val BUTTON_ANIMATION_DURATION = 1500L
   }
@@ -96,6 +114,9 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   private var distanceUnit: String = DirectionsCriteria.IMPERIAL
   private var locale = Locale.getDefault()
   private var travelMode: String = DirectionsCriteria.PROFILE_DRIVING
+  private val userAnnotations: MutableMap<String, PointAnnotation> = mutableMapOf()
+  private val animators: MutableMap<String, ValueAnimator> = mutableMapOf()
+  public var pointAnnotationManager: PointAnnotationManager? = null
 
   /**
    * Bindings to the example layout.
@@ -487,6 +508,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
           .build()
       )
     }
+    ParticipantsManager.shared?.delegate = this
   }
 
   @SuppressLint("MissingPermission")
@@ -624,7 +646,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     binding.mapView.location.apply {
       setLocationProvider(navigationLocationProvider)
       this.locationPuck = LocationPuck2D(
-        bearingImage = ImageHolder.Companion.from(
+        bearingImage = ImageHolder.from(
           com.mapbox.navigation.ui.maps.R.drawable.mapbox_navigation_puck_icon
         )
       )
@@ -726,12 +748,12 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     mapboxNavigation?.setNavigationRoutes(routes)
 
     // show UI elements
-    binding.soundButton.visibility = View.VISIBLE
-    binding.routeOverview.visibility = View.VISIBLE
-    binding.tripProgressCard.visibility = View.VISIBLE
+    binding.soundButton.visibility = VISIBLE
+    binding.routeOverview.visibility = VISIBLE
+    binding.tripProgressCard.visibility = VISIBLE
 
     // move the camera to overview when new route is available
-//    navigationCamera.requestNavigationCameraToOverview()
+    //    navigationCamera.requestNavigationCameraToOverview()
     mapboxNavigation?.startTripSession(withForegroundService = true)
   }
 
@@ -764,10 +786,10 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
     mapboxNavigation?.setNavigationRoutes(listOf())
 
     // hide UI elements
-    binding.soundButton.visibility = View.INVISIBLE
-    binding.maneuverView.visibility = View.INVISIBLE
-    binding.routeOverview.visibility = View.INVISIBLE
-    binding.tripProgressCard.visibility = View.INVISIBLE
+    binding.soundButton.visibility = INVISIBLE
+    binding.maneuverView.visibility = INVISIBLE
+    binding.routeOverview.visibility = INVISIBLE
+    binding.tripProgressCard.visibility = INVISIBLE
   }
 
   private fun sendErrorToReact(error: String?) {
@@ -820,7 +842,7 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
   }
 
   fun setShowCancelButton(show: Boolean) {
-    binding.stop.visibility = if (show) View.VISIBLE else View.INVISIBLE
+    binding.stop.visibility = if (show) VISIBLE else INVISIBLE
   }
 
   fun setTravelMode(mode: String) {
@@ -832,8 +854,83 @@ class MapboxNavigationView(private val context: ThemedReactContext): FrameLayout
         else -> DirectionsCriteria.PROFILE_DRIVING_TRAFFIC
     }
   }
-
-    public void updateMarkers(List<Map<String, Object>> userList) {
-          // update pins here
+  override fun participantsDidUpdate(list: List<Map<String, Any>>) {
+    Log.d("Suleman",list.toString())
+    runOnUiThread {
+      val mapView = binding.mapView ?: return@runOnUiThread
+      if (pointAnnotationManager == null) {
+        pointAnnotationManager = mapView.annotations.createPointAnnotationManager().apply {
+          iconPitchAlignment = IconPitchAlignment.MAP
+        }
       }
+      val seenIds = mutableSetOf<String>()
+      val annotations = ArrayList<PointAnnotation>();
+      list.forEach { user ->
+        val id = user["id"] as? String ?: return@forEach
+        val displayName = user["displayName"] as? String ?: return@forEach
+        val lat = user["lat"] as? Double ?: return@forEach
+        val lng = user["lng"] as? Double ?: return@forEach
+        var imageUrl = user["imageUrl"] as? String ?: ""
+
+        val newPoint = Point.fromLngLat(lng, lat)
+        seenIds.add(id)
+
+        val existingAnnotation = userAnnotations[id]
+
+        if (existingAnnotation != null) {
+            // Animate from old position to new
+            animators[id]?.cancel()
+            val animator = ValueAnimator.ofObject(
+              CarEvaluator(),
+              existingAnnotation.point,
+              newPoint
+            ).apply {
+              duration = 1000L // 1 second
+              interpolator = LinearInterpolator()
+              addUpdateListener { valueAnimator ->
+                val animatedPoint = valueAnimator.animatedValue as Point
+                existingAnnotation.point = animatedPoint
+                pointAnnotationManager?.update(listOf(existingAnnotation))
+              }
+              start()
+            }
+            animators[id] = animator
+
+        } else {
+          // New user → create annotation
+          val annotation = PointAnnotationOptions()
+            .withPoint(newPoint)
+            .withIconImage(bitmapFromFile(path = imageUrl))
+            .withIconSize(0.2)
+            .withTextField(displayName)
+            .let { pointAnnotationManager!!.create(it) }
+          annotations.add(annotation)
+          userAnnotations[id] = annotation
+        }
+      }
+      pointAnnotationManager?.update(annotations)
+    }
+  }
+
+  fun bitmapFromFile(path: String): Bitmap {
+    return try {
+      BitmapFactory.decodeFile(path)
+    } catch (e: Exception) {
+    return BitmapFactory.decodeResource(context.resources, R.drawable.ic_user_offline)
+    }
+  }
+}
+
+private class CarEvaluator : TypeEvaluator<Point> {
+  override fun evaluate(
+    fraction: Float,
+    startValue: Point,
+    endValue: Point
+  ): Point {
+    val lat =
+      startValue.latitude() + (endValue.latitude() - startValue.latitude()) * fraction
+    val lon =
+      startValue.longitude() + (endValue.longitude() - startValue.longitude()) * fraction
+    return Point.fromLngLat(lon, lat)
+  }
 }

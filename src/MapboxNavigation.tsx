@@ -113,8 +113,13 @@ const MapboxNavigation: React.FC<MapboxNavigationProps> = (props) => {
 };
 
 const styles = StyleSheet.create({
-  mapbox: { flex: 1 },
-  message: { textAlign: 'center', fontSize: 16 },
+  mapbox: {
+    flex: 1,
+  },
+  message: {
+    textAlign: 'center',
+    fontSize: 16,
+  },
 });
 
 export default MapboxNavigation;

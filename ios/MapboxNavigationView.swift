@@ -72,17 +72,13 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Par
     @objc var onArrive: RCTDirectEventBlock?
     @objc var vehicleMaxHeight: NSNumber?
     @objc var vehicleMaxWidth: NSNumber?
+    var pointAnnotationManager: PointAnnotationManager?
 
     override init(frame: CGRect) {
         self.embedded = false
         self.embedding = false
         super.init(frame: frame)
         ParticipantsManager.shared?.delegate = self
-
-        // Initial load
-        if let participants = ParticipantsManager.shared?.getParticipants() {
-            updateParticipantsOnMap(participants)
-        }
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -218,7 +214,29 @@ public class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Par
         return true;
     }
 
-    private func updateParticipantsOnMap(_ list: [[String: Any]]) {
-        // Update Mapbox markers here
+  private func updateParticipantsOnMap(_ list: [[String: Any]]) {
+    guard let mapView = navViewController?.navigationMapView else { return }
+    if pointAnnotationManager == nil {
+      pointAnnotationManager = mapView.mapView.annotations.makePointAnnotationManager()
     }
+    var uannotations: [PointAnnotation] = []
+    for user in list {
+      guard
+        let id = user["id"] as? String,
+        let displayName = user["displayName"] as? String,
+        let lat = user["lat"] as? Double,
+        let lng = user["lng"] as? Double
+      else { continue }
+      let imageUrl = user["imageUrl"] as? String ?? ""
+      let newCoordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+      var annotation = PointAnnotation(id: id, coordinate: newCoordinate)
+      annotation.textField = displayName
+      annotation.image = .init(image: UIImage(contentsOfFile: imageUrl) ?? UIImage(named: "user_offline_pin")!, name: id)
+      annotation.iconSize = 0.2
+      annotation.userInfo = user
+      uannotations.append(annotation)
+    }
+    self.pointAnnotationManager?.annotations.removeAll()
+    self.pointAnnotationManager?.annotations = uannotations
+  }
 }
